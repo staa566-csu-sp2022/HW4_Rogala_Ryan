@@ -1,0 +1,78 @@
+---
+title: "HW5_Rogala_Ryan"
+author: "Ryan Rogala"
+output: html_document  
+knit: (function(input_file, encoding) {
+  out_dir <- 'docs';
+  rmarkdown::render(input_file,
+  encoding=encoding,
+  output_file=file.path(dirname(input_file), out_dir, 'index.html'))
+  })
+---
+
+### Data: 
+The data for this plot is from the *datasets* package in R and is called *mtcars*.  
+
+### Objective:  
+The objective of the table was to summarize the *mtcars* data set and provide the user with enough information so that they can begin to understand the relationships among variables. The summary of this data is focused around cars grouped by *Weight Class* and *Engine Type*.  
+
+### Functionality:  
+The functionality of this table is simple, the user has the ability to hover over each row and highlight that rows values. 
+
+### Formatting:  
+The table is formatted such that grouping variables are on the left and related metrics to are on the right. To clean up column names, the last 5 columns have a top header that indicates the metrics below it are averages. To keep the numeric values of the table clean, most columns are round to the nearest integer, with the exception of *quarter-mile time*, which is rounded to 2 decimals since fractions of seconds are valuable in this case. Lastly, car weight is formatted with a comma in order to make the 4-digit numbers easy to read.  
+  
+  
+```{r, error=FALSE, message=FALSE, warning=FALSE}
+#load packages from library. 
+library(tidyverse)
+library(plotly)
+library(kableExtra)
+library(datasets)
+library(knitr)
+```
+
+
+```{r}
+#read in data. 
+df <- mtcars %>% mutate(cyl=as.factor(cyl), 
+                        wt_class=as.factor(as.character((
+                          if_else(wt <= 2.5, "Light", 
+                                  if_else(wt <= 3.5, "Medium",
+                                          "Heavy"))))),
+                        vs = as.factor(vs),
+                        gear=as.integer(gear),
+                        carb=as.integer(carb),
+                        vs = factor(vs, labels = c("V-shape", "Inline")),
+                        am = factor(am, labels = c("Automatic", "Manual")))
+```
+  
+  
+```{r, error=FALSE, message=FALSE, warning=FALSE}
+#get summary stats and format table.  
+tab1 <- 
+  df %>% group_by(wt_class, vs) %>% 
+  summarise(
+    n=n(),
+    avg_mpg=round(mean(mpg)),
+    avg_wt=round(mean(wt*1000)),
+    avg_hp=round(mean(hp)),
+    avg_disp=round(mean(disp)),
+    avg_qsec=round(mean(qsec), 2)) %>% 
+  arrange(avg_wt, vs) %>%
+  kbl(col.names= c("Weight Class",
+                   "Engine",
+                   "Cars",
+                   "MPG",
+                   "Weight (lbs)",
+                   "Horsepower",
+                   "Displacment (cu.in)",
+                   "1/4 Mile Time (seconds)"),
+      digits = 3,
+      format.args = list(big.mark = ",")) %>% 
+  add_header_above(c(" "," "," ","Average Metrics" = 5)) %>%
+  kable_paper(lightable_options = "hover", full_width = FALSE)
+
+tab1
+```
+
